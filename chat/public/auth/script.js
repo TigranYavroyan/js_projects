@@ -5,15 +5,20 @@ document.getElementById('nameForm').addEventListener('submit', async (event) => 
 	const name = document.getElementById('name').value.trim();
 
 	if (name) {
-		fetch(`${backend}user`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "text/plain"
-			},
-			body: name
-		});
-		localStorage.setItem('username', name);
-		window.location.href = `${backend}chat`;
+		try {
+			fetch(`${backend}user`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "text/plain"
+				},
+				body: name
+			});
+			sessionStorage.setItem("username", name);
+			window.location.href = `${backend}chat`;
+		}
+		catch (err) {
+			console.log("Error: ", err);
+		}
 	}
 	else {
 		alert('Please enter your name before submitting!');

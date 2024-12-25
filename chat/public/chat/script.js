@@ -5,6 +5,9 @@ const sendButton = document.getElementById('send-button');
 const back_port = 3000;
 const back = `http://localhost:${back_port}/`;
 const backendEndpoint = `${back}messages`;
+const curr_user = sessionStorage.getItem("username");
+console.log("I am", curr_user);
+sessionStorage.removeItem("username");
 
 // Function to display a message
 function addMessage(text, isSent) {
@@ -19,18 +22,14 @@ function addMessage(text, isSent) {
 async function fetch_new_messages_1s() {
   setInterval(async () => {
     try {
-      const response = await fetch(`${back}sent`, {
-        method: "GET",
-      });
-
+      const response = await fetch_data(`${back}sent`, "POST", {username: curr_user})
       const data = await response.json();
-      console.log("fetch data from getting new messages: ", data);
-      const messages = data.messages;
-
-      if (messages.length !== 0) {
-        for (let i = 0; i < messages.length; ++i) {
-          addMessage(messages[i], false);
-        }
+      if (data.for_user === curr_user) {
+        console.log("Right user sent!!!");
+        console.log("Data:", data);
+        data.messages.forEach((msg) => {
+          addMessage(msg, false);
+        });
       }
     }
     catch (err) {
@@ -39,7 +38,7 @@ async function fetch_new_messages_1s() {
   }, 1000);
 }
 
-async function fetch_data (_method, json) {
+async function fetch_data (URL, _method, json) {
 	let obj = {};
 	if (_method !== null) {
 		obj = {
@@ -52,15 +51,12 @@ async function fetch_data (_method, json) {
 	}
 	try {
 
-		const response = await fetch(backendEndpoint, obj);
+		const response = await fetch(URL, obj);
 
 		if (!response.ok) {
 			throw new Error(`Error, status: ${response.status}`);
 		}
-
-		const data = await response.json();
-		console.log(`Data: ${data}`);
-		return data;
+    return response;
 	}
 	catch (err) {
 		console.log("Exception: ", err);
@@ -77,8 +73,7 @@ sendButton.addEventListener('click', async () => {
     // Clear the input
     messageInput.value = '';
 
-    const data = await fetch_data("POST", {message: messageText});
-    addMessage(data.data, false);
+    await fetch_data(backendEndpoint, "POST", {message: messageText, user: curr_user});
   }
 });
 
